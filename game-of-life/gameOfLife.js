@@ -89,18 +89,38 @@ class Field {
   }
 
   neighbours(row, col) {
+    const rowIndex = (index) => {
+      return (this.nrows + (index % this.nrows)) % this.nrows;
+    };
+
+    const colIndex = (index) => {
+      return (this.ncols + (index % this.ncols)) % this.ncols;
+    };
+
     return [
-      this.cells.get(row - 1, col - 1),
-      this.cells.get(row - 1, col),
-      this.cells.get(row - 1, col + 1),
+      this.cells.get(rowIndex(row - 1), colIndex(col - 1)),
+      this.cells.get(rowIndex(row - 1), colIndex(col)),
+      this.cells.get(rowIndex(row - 1), colIndex(col + 1)),
 
-      this.cells.get(row, col - 1),
-      this.cells.get(row, col + 1),
+      this.cells.get(rowIndex(row), colIndex(col - 1)),
+      this.cells.get(rowIndex(row), colIndex(col + 1)),
 
-      this.cells.get(row + 1, col - 1),
-      this.cells.get(row + 1, col),
-      this.cells.get(row + 1, col + 1)
+      this.cells.get(rowIndex(row + 1), colIndex(col - 1)),
+      this.cells.get(rowIndex(row + 1), colIndex(col)),
+      this.cells.get(rowIndex(row + 1), colIndex(col + 1)),
     ];
+    // return [
+    //   this.cells.get(row - 1, col - 1),
+    //   this.cells.get(row - 1, col),
+    //   this.cells.get(row - 1, col + 1),
+    //
+    //   this.cells.get(row, col - 1),
+    //   this.cells.get(row, col + 1),
+    //
+    //   this.cells.get(row + 1, col - 1),
+    //   this.cells.get(row + 1, col),
+    //   this.cells.get(row + 1, col + 1)
+    // ];
   }
 
   numberOfNeighbours(row, col) {
@@ -130,7 +150,7 @@ const nextBtn = document.getElementById('next');
 const autoRunBtn = document.getElementById('auto-run');
 const table = document.getElementById('game-field');
 
-let field = Field.random(30, 30, 0);
+let field = Field.random(20, 15, 0);
 field.draw(table);
 
 nextBtn.addEventListener('click', (event) => {
