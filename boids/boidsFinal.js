@@ -34,10 +34,16 @@ class Vec2D {
 }
 
 class Boid {
-  constructor(pos, vel, radius) {
+  constructor(
+    pos,
+    vel,
+    radius,
+    radii = { cohesion: 80, separation: 20, alignment: 100 }
+  ) {
     this.pos = pos;
     this.vel = vel;
     this.radius = radius;
+    this.radii = radii;
   }
 
   neighbours(boids, radius) {
@@ -48,9 +54,9 @@ class Boid {
 
   update(boids) {
     this.vel = this.vel
-      .add(this.cohesion(this.neighbours(boids, 100)))
-      .add(this.separation(this.neighbours(boids, 20)))
-      .add(this.alignment(this.neighbours(boids, 100)));
+      .add(this.cohesion(this.neighbours(boids, this.radii.cohesion)))
+      .add(this.separation(this.neighbours(boids, this.radii.separation)))
+      .add(this.alignment(this.neighbours(boids, this.radii.alignment)));
 
     const maxSpeed = 3;
     if (this.vel.norm() > maxSpeed) {
@@ -133,9 +139,28 @@ class Field {
   }
 
   _drawSingleBoid(boid) {
+    // Cohesion
+    this.context.beginPath();
+    this.context.arc(boid.pos.x, boid.pos.y, boid.radii.cohesion, 0, 2 * Math.PI);
+    this.context.strokeStyle = "rgba(255, 255, 255, 0.05)";
+    this.context.stroke();
+    this.context.closePath();
+    // Separation
+    this.context.beginPath();
+    this.context.arc(boid.pos.x, boid.pos.y, boid.radii.separation, 0, 2 * Math.PI);
+    this.context.fillStyle = "rgba(255, 255, 255, 0.05)";
+    this.context.fill();
+    this.context.closePath();
+    // Alignment
+    this.context.beginPath();
+    this.context.arc(boid.pos.x, boid.pos.y, boid.radii.alignment, 0, 2 * Math.PI);
+    this.context.strokeStyle = "rgba(255, 255, 255, 0.1)";
+    this.context.stroke();
+    this.context.closePath();
+    // Body
     this.context.beginPath();
     this.context.arc(boid.pos.x, boid.pos.y, boid.radius, 0, 2 * Math.PI);
-    this.context.fillStyle = "rgba(0, 255, 0, 0.5)";
+    this.context.fillStyle = "rgba(0, 255, 0, 1)";
     this.context.fill();
     this.context.closePath();
   }
