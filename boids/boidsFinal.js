@@ -34,9 +34,10 @@ class Vec2D {
 }
 
 class Boid {
-  constructor(pos, vel) {
+  constructor(pos, vel, radius) {
     this.pos = pos;
     this.vel = vel;
+    this.radius = radius;
   }
 
   neighbours(boids, radius) {
@@ -133,7 +134,7 @@ class Field {
 
   _drawSingleBoid(boid) {
     this.context.beginPath();
-    this.context.arc(boid.pos.x, boid.pos.y, 10, 0, 2 * Math.PI);
+    this.context.arc(boid.pos.x, boid.pos.y, boid.radius, 0, 2 * Math.PI);
     this.context.fillStyle = "rgba(0, 255, 0, 0.5)";
     this.context.fill();
     this.context.closePath();
@@ -147,7 +148,8 @@ function randomBoids(N) {
     boids.push(
       new Boid(
         new Vec2D(Math.random() * 600, Math.random() * 600),
-        new Vec2D(Math.random() * 2 - 1, Math.random() * 2 - 1)
+        new Vec2D(Math.random() * 2 - 1, Math.random() * 2 - 1),
+        Math.floor(Math.random() * 2 + 8)
       )
     );
   }
