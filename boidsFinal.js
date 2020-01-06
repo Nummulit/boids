@@ -165,8 +165,10 @@ class Field {
   }
 
   clear() {
-    this.context.fillStyle = "rgba(0, 0, 0, 0.8)";
+    this.context.beginPath();
+    this.context.fillStyle = "rgba(0, 0, 0, )";
     this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.context.closePath();
   }
 
   drawObstacles(obstacles) {
@@ -176,10 +178,14 @@ class Field {
   }
 
   _drawSingleObstacle(obstacle) {
+    this.context.save();
     this.context.beginPath();
-    this.context.fillStyle = "white";
+    this.context.shadowColor = "violet";
+    this.context.shadowBlur = 15;
+    this.context.fillStyle = "black";
     this.context.fillRect(obstacle.pos.x, obstacle.pos.y, obstacle.dim.x, obstacle.dim.y)
     this.context.closePath();
+    this.context.restore();
   }
 
   drawBoids(boids) {
@@ -207,6 +213,7 @@ class Field {
   }
 
   _drawSingleBoid(boid) {
+    this.context.save();
     // Cohesion
     this.context.beginPath();
     this.context.arc(boid.pos.x, boid.pos.y, boid.radii.cohesion, 0, 2 * Math.PI);
@@ -231,6 +238,7 @@ class Field {
     this.context.fillStyle = boid.color;
     this.context.fill();
     this.context.closePath();
+    this.context.restore();
   }
 }
 
@@ -253,7 +261,7 @@ function randomObstacles(N) {
   while(N--) {
     obstacles.push(
       new RectangularObstacle(
-        new Vec2D(Math.random() * 600, Math.random() * 600),
+        new Vec2D(Math.random() * 1200, Math.random() * 400 + 200),
         new Vec2D(Math.random() * 20 + 80, Math.random() * 20 + 50)
       )
     );
