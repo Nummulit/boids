@@ -261,6 +261,26 @@ function randomObstacles(N) {
   return obstacles;
 }
 
+const radii = {
+  cohesion: 80,
+  separation: 20,
+  alignment: 100
+}
+
+// Ranges
+const cohesionRange = document.getElementById('cohesion-range');
+cohesionRange.addEventListener('input', event => {
+  radii.cohesion = parseInt(event.target.value);
+});
+const separationRange = document.getElementById('separation-range');
+separationRange.addEventListener('input', event => {
+  radii.separation = parseInt(event.target.value);
+});
+const alignmentRange = document.getElementById('alignment-range');
+alignmentRange.addEventListener('input', event => {
+  radii.alignment = parseInt(event.target.value);
+});
+
 
 // DOM handling.
 const field = new Field(document.getElementById("field").getContext("2d"));
@@ -271,6 +291,7 @@ function updateCanvas() {
   field.drawBoids(boids);
   field.drawObstacles(obstacles);
   for (let boid of boids) {
+    boid.radii = radii;
     boid.collide(obstacles);
     boid.update(boids);
   }
