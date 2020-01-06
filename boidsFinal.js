@@ -31,13 +31,6 @@ class Vec2D {
   norm() {
     return Math.sqrt(this.dot(this));
   }
-
-  rotate(rad) {
-    return new Vec2D(
-      this.x * Math.cos(rad) - this.y * Math.sin(rad),
-      this.x * Math.sin(rad) + this.y * Math.cos(rad)
-    );
-  }
 }
 
 class RectangularObstacle {
@@ -61,29 +54,35 @@ class Boid {
     radius,
     radii = { cohesion: 80, separation: 20, alignment: 100 },
     coefficients = { cohesion: 0.001, separation: 0.1, alignment: 0.01 },
-    color = 'rgb(0, 255, 0)'
+    maxSpeed = 3,
+    color = 'lime'
   ) {
     this.pos = pos;
     this.vel = vel;
     this.radius = radius;
     this.radii = radii;
     this.coefficients = coefficients;
+    this.maxSpeed = maxSpeed;
     this.color = color;
   }
 
+  // Return all boids from `boids` in given `radius` (except itself).
   neighbours(boids, radius) {
     return boids.filter(
       boid => this !== boid && this.pos.subtract(boid.pos).norm() < radius
     );
   }
 
+  // Calculate position after collision with every obstacle from `obstacles`.
   collide(obstacles) {
     for (let obstacle of obstacles) {
+      // Rectangle enlarged by this.radius for easier calculation of collision.
       const boundingBox = new RectangularObstacle(
         new Vec2D(obstacle.pos.x - this.radius, obstacle.pos.y - this.radius),
         new Vec2D(obstacle.dim.x + 2 * this.radius, obstacle.dim.y + 2 * this.radius)
       );
 
+      // Needed for deciding in which direction to reflect.
       const boundingBoxCenter = boundingBox.pos.add(boundingBox.dim.divide(2));
       const ratio = boundingBox.dim.x / boundingBox.dim.y;
       const vecToCenter = this.pos.subtract(boundingBoxCenter);
@@ -102,8 +101,10 @@ class Boid {
   }
 
   update(boids) {
-    // For optimization we will sort the radii in descending order so the smaller ones will
-    // search only through previously filtered boids.
+    /**
+     * For optimization we will sort the radii in descending order so the smaller ones will search only through 
+     * previously filtered boids.
+     */
     const sortedRadii = Object.entries(this.radii).sort((prev, next) => prev[1] < next[1]);
     let neighbours = boids;
     for (let [ruleName, radius] of sortedRadii) {
@@ -111,9 +112,8 @@ class Boid {
       this.vel = this.vel.add(this[ruleName](neighbours))
     }
 
-    const maxSpeed = 3;
-    if (this.vel.norm() > maxSpeed) {
-      this.vel = this.vel.divide(this.vel.norm()).multiply(maxSpeed);
+    if (this.vel.norm() > this.maxSpeed) {
+      this.vel = this.vel.divide(this.vel.norm()).multiply(this.maxSpeed);
     }
 
     this.pos = this.pos.add(this.vel);
@@ -165,7 +165,7 @@ class Field {
   }
 
   clear() {
-    this.context.fillStyle = "rgba(0, 0, 0, 1)";
+    this.context.fillStyle = "rgba(0, 0, 0, 0.8)";
     this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
@@ -242,7 +242,7 @@ function randomBoids(N) {
       new Boid(
         new Vec2D(Math.random() * 200, Math.random() * 200),
         new Vec2D(Math.random() * 2 - 1, Math.random() * 2 - 1),
-        Math.floor(Math.random() * 2 + 2)
+        Math.floor(Math.random() * 2 + 4)
       )
     );
   }
@@ -262,10 +262,10 @@ function randomObstacles(N) {
 }
 
 
-// DOM handling
+// DOM handling.
 const field = new Field(document.getElementById("field").getContext("2d"));
-const boids = randomBoids(300);
-const obstacles = randomObstacles(3);
+const boids = randomBoids(100);
+const obstacles = randomObstacles(5);
 function updateCanvas() {
   field.clear();
   field.drawBoids(boids);
