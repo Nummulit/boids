@@ -296,7 +296,7 @@ canvas.width = document.body.clientWidth;
 canvas.height = document.body.clientHeight;
 
 // DOM handling.
-const field = new Field(document.getElementById("field").getContext("2d"));
+const field = new Field(canvas.getContext("2d"));
 const boids = randomBoids(100);
 const obstacles = randomObstacles(5);
 function updateCanvas() {
