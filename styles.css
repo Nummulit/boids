@@ -1,0 +1,19 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow: hidden;
+  height: 100%;
+}
+
+.controls {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(255, 255, 255, 0.5);
+  padding: 10px;
+}

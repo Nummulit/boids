@@ -282,6 +282,11 @@ alignmentRange.addEventListener('input', event => {
 });
 
 
+// Canvas setting.
+const canvas = document.getElementById("field");
+canvas.width = document.body.clientWidth;
+canvas.height = document.body.clientHeight;
+
 // DOM handling.
 const field = new Field(document.getElementById("field").getContext("2d"));
 const boids = randomBoids(100);
