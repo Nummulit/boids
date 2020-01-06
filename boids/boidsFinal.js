@@ -38,12 +38,14 @@ class Boid {
     pos,
     vel,
     radius,
-    radii = { cohesion: 80, separation: 20, alignment: 100 }
+    radii = { cohesion: 80, separation: 20, alignment: 100 },
+    coefficients = { cohesion: 0.001, separation: 0.1, alignment: 0.01 }
   ) {
     this.pos = pos;
     this.vel = vel;
     this.radius = radius;
     this.radii = radii;
+    this.coefficients = coefficients;
   }
 
   neighbours(boids, radius) {
@@ -53,11 +55,15 @@ class Boid {
   }
 
   update(boids) {
-    this.vel = this.vel
-      .add(this.cohesion(this.neighbours(boids, this.radii.cohesion)))
-      .add(this.separation(this.neighbours(boids, this.radii.separation)))
-      .add(this.alignment(this.neighbours(boids, this.radii.alignment)));
-
+    // For optimization we will sort the radii in descending order so the smaller ones will
+    // search only through previously filtered nodes.
+    const sortedRadii = Object.entries(this.radii).sort((prev, next) => prev[1] < next[1]);
+    let neighbours = boids;
+    for (let [ruleName, radius] of sortedRadii) {
+      neighbours = this.neighbours(neighbours, radius);
+      this.vel = this.vel.add(this[ruleName](neighbours))
+    }
+    
     const maxSpeed = 3;
     if (this.vel.norm() > maxSpeed) {
       this.vel = this.vel.divide(this.vel.norm()).multiply(maxSpeed);
@@ -74,8 +80,9 @@ class Boid {
       centerPos = centerPos.add(boid.pos);
     }
     centerPos = centerPos.divide(neighbours.length);
-    const coefficient = 0.001;
-    return centerPos.subtract(this.pos).multiply(coefficient);
+    return centerPos
+      .subtract(this.pos)
+      .multiply(this.coefficients.cohesion);
   }
 
   separation(neighbours) {
@@ -85,8 +92,8 @@ class Boid {
     for (let boid of neighbours) {
       separationVel = separationVel.subtract(boid.pos.subtract(this.pos));
     }
-    const coefficient = 0.1;
-    return separationVel.multiply(coefficient);
+    return separationVel
+      .multiply(this.coefficients.separation);
   }
 
   alignment(neighbours) {
@@ -98,8 +105,9 @@ class Boid {
     }
 
     alignmentVel = alignmentVel.divide(neighbours.length);
-    const coefficient = 0.01;
-    return alignmentVel.subtract(this.vel).multiply(coefficient);
+    return alignmentVel
+      .subtract(this.vel)
+      .multiply(this.coefficients.alignment);
   }
 }
 
