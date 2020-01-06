@@ -31,12 +31,26 @@ class Vec2D {
   norm() {
     return Math.sqrt(this.dot(this));
   }
+
+  rotate(rad) {
+    return new Vec2D(
+      this.x * Math.cos(rad) - this.y * Math.sin(rad),
+      this.x * Math.sin(rad) + this.y * Math.cos(rad)
+    );
+  }
 }
 
-class Obstacle {
+class RectangularObstacle {
   constructor(pos, dim) {
     this.pos = pos;
     this.dim = dim;
+  }
+
+  hasInside(vec) {
+    return (
+      this.pos.x <= vec.x && vec.x <= this.pos.x + this.dim.x && 
+      this.pos.y <= vec.y && vec.y <= this.pos.y + this.dim.y
+    );
   }
 }
 
@@ -63,46 +77,29 @@ class Boid {
     );
   }
 
-  avoidCollision(obstacles) {
-    // Castin a ray
-    const rayLength = 50;
-    const velNormal = this.vel.divide(this.vel.norm());
-    const rayEnd = velNormal.multiply(rayLength);
-
-    const ctx = document.getElementById("field").getContext("2d");
-    ctx.beginPath();
-    ctx.strokeStyle = 'white';
-    ctx.moveTo(this.pos.x, this.pos.y);
-    ctx.lineTo(this.pos.x + rayEnd.x, this.pos.y + rayEnd.y);
-    ctx.stroke();
-    ctx.closePath();
-
+  collide(obstacles) {
     for (let obstacle of obstacles) {
-      if (obstacle.pos.x <= this.pos.x + rayEnd.x &&
-          this.pos.x + rayEnd.x <= obstacle.pos.x + obstacle.dim.x && 
-          obstacle.pos.y <= this.pos.y + rayEnd.y && 
-          this.pos.y + rayEnd.y <= obstacle.pos.y + obstacle.dim.y) {
-            this.color = "gold";
-            this.vel = this.vel.multiply(-1);
-      }
-      else {
-        this.color = "rgb(0, 255, 0)";
-      }
+      const boundingBox = new RectangularObstacle(
+        new Vec2D(obstacle.pos.x - this.radius, obstacle.pos.y - this.radius),
+        new Vec2D(obstacle.dim.x + 2 * this.radius, obstacle.dim.y + 2 * this.radius)
+      );
+
+      const boundingBoxCenter = boundingBox.pos.add(boundingBox.dim.divide(2));
+      const ratio = boundingBox.dim.x / boundingBox.dim.y;
+      const vecToCenter = this.pos.subtract(boundingBoxCenter);
+
+        if (boundingBox.hasInside(this.pos)) {
+          if (Math.abs(vecToCenter.x) > ratio * Math.abs(vecToCenter.y)) {
+            this.vel.x *= -1;
+          } else {
+            this.vel.y *= -1;
+          }
+          while (boundingBox.hasInside(this.pos)) {
+            this.pos = this.pos.add(this.vel);
+          }
+        }
     }
-
   }
-
-  // isColliding(obstacles) {
-  //   for (let obstacle of obstacles) {
-  //     if (obstacle.pos.x <= this.pos.x && this.pos.x <= obstacle.pos.x + obstacle.dim.x && 
-  //         obstacle.pos.y <= this.pos.y && this.pos.y <= obstacle.pos.y + obstacle.dim.y) {
-  //           this.color = "gold";
-  //     }
-  //     else {
-  //       this.color = "rgb(0, 255, 0)";
-  //     }
-  //   }
-  // }
 
   update(boids) {
     // For optimization we will sort the radii in descending order so the smaller ones will
@@ -180,7 +177,7 @@ class Field {
 
   _drawSingleObstacle(obstacle) {
     this.context.beginPath();
-    this.context.fillStyle = "rgba(125, 125, 125, 0.5)";
+    this.context.fillStyle = "white";
     this.context.fillRect(obstacle.pos.x, obstacle.pos.y, obstacle.dim.x, obstacle.dim.y)
     this.context.closePath();
   }
@@ -245,28 +242,36 @@ function randomBoids(N) {
       new Boid(
         new Vec2D(Math.random() * 200, Math.random() * 200),
         new Vec2D(Math.random() * 2 - 1, Math.random() * 2 - 1),
-        Math.floor(Math.random() * 2 + 8)
+        Math.floor(Math.random() * 2 + 2)
       )
     );
   }
   return boids;
 }
-
+function randomObstacles(N) {
+  const obstacles = [];
+  while(N--) {
+    obstacles.push(
+      new RectangularObstacle(
+        new Vec2D(Math.random() * 600, Math.random() * 600),
+        new Vec2D(Math.random() * 20 + 80, Math.random() * 20 + 50)
+      )
+    );
+  }
+  return obstacles;
+}
 
 
 // DOM handling
 const field = new Field(document.getElementById("field").getContext("2d"));
-const boids = randomBoids(100);
-const obstacles = [
-  new Obstacle(new Vec2D(200, 300), new Vec2D(300, 200))
-]
+const boids = randomBoids(300);
+const obstacles = randomObstacles(3);
 function updateCanvas() {
   field.clear();
   field.drawBoids(boids);
   field.drawObstacles(obstacles);
   for (let boid of boids) {
-    // boid.isColliding(obstacles);
-    boid.avoidCollision(obstacles);
+    boid.collide(obstacles);
     boid.update(boids);
   }
   window.requestAnimationFrame(updateCanvas);
